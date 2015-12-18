@@ -302,7 +302,7 @@ describe("Entities Schemas", function()
     end)
 
     describe("self_check", function()
-      it("should refuse `consumer_id` if specified in the config schema", function()
+      pending("[TODO: MOVE TO INTEGRATION TESTS] should refuse `consumer_id` if specified in the config schema", function()
         local stub_config_schema = {
           no_consumer = true,
           fields = {

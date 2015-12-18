@@ -110,7 +110,7 @@ function BaseDao:insert(t)
   local ok, db_err, errors, self_err
 
   -- Populate the entity with any default/overriden values and validate it
-  ok, errors, self_err = validations.validate_entity(t, self._schema, {
+  ok, errors = validations.validate_entity(t, self._schema, {
     dao = self._factory,
     dao_insert = function(field)
       if field.type == "id" then
@@ -120,11 +120,17 @@ function BaseDao:insert(t)
       end
     end
   })
+  
+  if errors == nil and type(self._schema.self_check) == "function" then
+    ok, self_err = self._schema.self_check(self._schema, t, self._factory, false)
+  end
+  
   if self_err then
     return nil, self_err
   elseif not ok then
     return nil, DaoError(errors, error_types.SCHEMA)
   end
+
 
   ok, errors, db_err = self:check_unique_fields(t)
   if db_err then
@@ -212,11 +218,16 @@ function BaseDao:update(t, full)
   end
 
   -- Validate schema
-  ok, errors, self_err = validations.validate_entity(t, self._schema, {
+  ok, errors = validations.validate_entity(t, self._schema, {
     partial_update = not full,
     full_update = full,
     dao = self._factory
   })
+  
+  if errors == nil and type(self._schema.self_check) == "function" then
+    ok, self_err = self._schema.self_check(self._schema, t, self._factory, true)
+  end
+  
   if self_err then
     return nil, self_err
   elseif not ok then

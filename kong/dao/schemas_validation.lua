@@ -226,12 +226,6 @@ function _M.validate_entity(tbl, schema, options)
         end
       end
 
-      if errors == nil and type(schema.self_check) == "function" then
-        local ok, err = schema.self_check(schema, t, options.dao, (options.partial_update or options.full_update))
-        if ok == false then
-          return false, nil, err
-        end
-      end
     end
   end
 
