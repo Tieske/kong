@@ -3,6 +3,16 @@ local http_client = require "kong.tools.http_client"
 local spec_helper = require "spec.spec_helpers"
 local assert = require "luassert"
 
+--- http request helper function for testing the admin api.
+-- Performs an http request based on `url`, `method` and `body`, and compares the result
+-- agansit the expected results `res_status` and `res_body`. The request is made twice,
+-- the second time explicitly with "application/json" set as content-type.
+-- @param url The request url
+-- @param method the http method to use for the request
+-- @param body the body to use for the request
+-- @param res_status the expected status code returned (errors if the actual code of either request differs)
+-- @param res_body (optional) if given, it must equal both responses, or it will error.
+-- @param options (optional) An options table supporting option `options.drop_db = true` to drop in between both requests
 local function send_content_types(url, method, body, res_status, res_body, options)
   if not options then options = {} end
 
