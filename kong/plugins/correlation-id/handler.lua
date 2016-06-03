@@ -11,7 +11,8 @@ local worker_uuid
 local worker_counter
 
 local fmt = string.format
-local ngx = ngx
+local now = ngx.now
+local worker_pid = tostring(ngx.worker.pid())
 
 local generators = setmetatable({
   ["uuid"] = function()
@@ -22,13 +23,14 @@ local generators = setmetatable({
     return worker_uuid.."#"..worker_counter
   end,
   ["tracker"] = function()
+    local var = ngx.var
     return fmt("%s-%s-%s-%s-%s-%s",
-      ngx.var.server_addr,
-      ngx.var.server_port,
-      ngx.worker.pid(),
-      ngx.var.connection, -- connection serial number
-      ngx.var.connection_requests, -- current number of requests made through a connection
-      ngx.now() -- the current time stamp from the nginx cached time.
+      var.server_addr,
+      var.server_port,
+      worker_pid,
+      var.connection, -- connection serial number
+      var.connection_requests, -- current number of requests made through a connection
+      now() -- the current time stamp from the nginx cached time.
     )
   end,
 }, { __index = function(self, generator)
