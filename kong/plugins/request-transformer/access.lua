@@ -133,6 +133,7 @@ local function transform_querystrings(conf)
       querystring[new_name] = value
       querystring[old_name] = nil
     end
+    req_set_uri_args(querystring)
   end
 
   -- Remove querystring(s)
