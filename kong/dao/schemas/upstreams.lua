@@ -159,6 +159,15 @@ return {
       unique = true,
       required = true,
     },
+    algorithm = {
+      type = "string",
+      default = "consistent",
+      required = true,
+      enum = {
+        "consistent",
+        "least",
+      },
+    },
     hash_on = {
       -- primary hash-key
       type = "string",
@@ -225,6 +234,10 @@ return {
       if p.port then
         return false, Errors.schema("Invalid name; no port allowed")
       end
+    end
+
+    if config.algorithm == "least" and config.hash_on ~= "none" then
+      return false, Errors.schema("Cannot use hashing with least-connections")
     end
 
     if config.hash_on_header then
