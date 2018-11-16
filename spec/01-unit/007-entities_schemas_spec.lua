@@ -958,6 +958,21 @@ describe("Entities Schemas", function()
       end
     end)
 
+    it("does not allow a least-connections with hashing", function()
+      local default = upstreams_schema.fields.healthchecks.default
+      local entity = {
+        name = "x",
+        algorithm = "least",
+        hash_on = "ip",
+        healthchecks = default,
+      }
+
+      local valid, errors, check = validate_entity(entity, upstreams_schema)
+      assert.is_false(valid)
+      assert.is_nil(errors)
+      assert.equal("Cannot use hashing with least-connections", check.message)
+    end)
+
   end)
 
   --

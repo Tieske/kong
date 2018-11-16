@@ -765,5 +765,14 @@ return {
       ALTER TABLE upstreams DROP hash_on_cookie;
       ALTER TABLE upstreams DROP hash_on_cookie_path;
     ]]
-  }
+  },
+  {
+    name = "2018-11-14-170900_least_connections",
+    up = [[
+      ALTER TABLE upstreams ADD algorithm text;
+    ]],
+    down = [[
+      ALTER TABLE upstreams DROP algorithm;
+    ]]
+  },
 }
