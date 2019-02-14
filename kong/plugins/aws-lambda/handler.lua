@@ -1,5 +1,8 @@
 -- Copyright (C) Kong Inc.
 
+-- Grab pluginname from module name
+local plugin_name = ({...})[1]:match("^kong%.plugins%.([^%.]+)")
+
 local BasePlugin = require "kong.plugins.base_plugin"
 local aws_v4 = require "kong.plugins.aws-lambda.v4"
 local responses = require "kong.tools.responses"
@@ -33,7 +36,7 @@ local AWS_PORT = 443
 local AWSLambdaHandler = BasePlugin:extend()
 
 function AWSLambdaHandler:new()
-  AWSLambdaHandler.super.new(self, "aws-lambda")
+  AWSLambdaHandler.super.new(self, plugin_name)
 end
 
 function AWSLambdaHandler:access(conf)
@@ -113,8 +116,13 @@ function AWSLambdaHandler:access(conf)
   }
 
   if conf.use_ec2_iam_role then
-    local iam_role_credentials, err = singletons.cache:get(IAM_CREDENTIALS_CACHE_KEY, { ttl = DEFAULT_CACHE_IAM_INSTANCE_CREDS_DURATION },
-                                                           fetch_iam_credentials_from_metadata_service)
+    local iam_role_credentials, err = singletons.cache:get(
+      IAM_CREDENTIALS_CACHE_KEY,
+      {
+        ttl = DEFAULT_CACHE_IAM_INSTANCE_CREDS_DURATION
+      },
+      fetch_iam_credentials_from_metadata_service
+    )
 
     if not iam_role_credentials then
       return responses.send_HTTP_INTERNAL_SERVER_ERROR(err)
@@ -129,7 +137,8 @@ function AWSLambdaHandler:access(conf)
     opts.secret_key = conf.aws_secret
   end
 
-  local request, err = aws_v4(opts)
+  local request
+  request, err = aws_v4(opts)
   if err then
     return responses.send_HTTP_INTERNAL_SERVER_ERROR(err)
   end
@@ -137,13 +146,23 @@ function AWSLambdaHandler:access(conf)
   -- Trigger request
   local client = http.new()
   client:set_timeout(conf.timeout)
-  client:connect(host, port)
-  local ok, err = client:ssl_handshake()
+  local ok
+  if conf.proxy_url then
+    ok, err = client:connect_proxy(conf.proxy_url, conf.proxy_scheme, host, port)
+  else
+    ok, err = client:connect(host, port)
+  end
   if not ok then
     return responses.send_HTTP_INTERNAL_SERVER_ERROR(err)
   end
 
-  local res, err = client:request {
+  ok, err = client:ssl_handshake()
+  if not ok then
+    return responses.send_HTTP_INTERNAL_SERVER_ERROR(err)
+  end
+
+  local res
+  res, err = client:request {
     method = "POST",
     path = request.url,
     body = request.body,
@@ -156,7 +175,7 @@ function AWSLambdaHandler:access(conf)
   local body = res:read_body()
   local headers = res.headers
 
-  local ok, err = client:set_keepalive(conf.keepalive)
+  ok, err = client:set_keepalive(conf.keepalive)
   if not ok then
     return responses.send_HTTP_INTERNAL_SERVER_ERROR(err)
   end

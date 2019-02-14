@@ -33,7 +33,7 @@ local function fetch_iam_credentials_from_metadata_service(metadata_service_host
 
   if role_name_request_res.status ~= 200 then
     return nil, "[aws-lambda] Fetching role name from metadata service returned status code " ..
-                role_name_request_res.status .. "with body " .. role_name_request_res.body
+                role_name_request_res.status .. " with body " .. role_name_request_res.body
   end
 
   local iam_role_name = role_name_request_res:read_body()
@@ -57,7 +57,7 @@ local function fetch_iam_credentials_from_metadata_service(metadata_service_host
   end
 
   if iam_security_token_request.status == 404 then
-    return nil, "[aws-lambda] Unable to request IAM credentials for role" .. iam_role_name ..
+    return nil, "[aws-lambda] Unable to request IAM credentials for role " .. iam_role_name ..
                 " Request returned status code " .. iam_security_token_request.status
   end
 

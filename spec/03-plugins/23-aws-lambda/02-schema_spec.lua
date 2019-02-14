@@ -73,13 +73,20 @@ describe("Plugin: AWS Lambda (schema)", function()
     assert.False(ok)
   end)
 
-  it("ok if aws_key or aws_secret is missing but use_ec2_iam_role is set to true", function()
+  it("accepts if aws_key or aws_secret is missing but use_ec2_iam_role is set to true", function()
     local entity = utils.table_merge(DEFAULTS, { use_ec2_iam_role = true })
     entity.aws_key = nil
     entity.aws_secret = nil
     local ok, err = validate_entity(entity, aws_lambda_schema)
     assert.is_nil(err)
     assert.True(ok)
+  end)
+
+  it("errors if proxy_scheme is missing while proxy_url is provided", function()
+    local entity = utils.table_merge(DEFAULTS, { proxy_url = "http://hello.com/proxy" })
+    local ok, err, self_err = validate_entity(entity, aws_lambda_schema)
+    assert.equal("You need to set proxy_scheme when proxy_url is set", self_err.message)
+    assert.False(ok)
   end)
 
 end)

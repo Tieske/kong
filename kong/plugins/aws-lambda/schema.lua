@@ -99,6 +99,16 @@ return {
     use_ec2_iam_role = {
       type="boolean",
     },
+    proxy_scheme = {
+      type = "string",
+      enum = {
+        "http",
+        "https",
+      }
+    },
+    proxy_url = {
+      type = "string"
+    },
   },
   self_check = function(schema, plugin_t, dao, is_update)
     if not plugin_t.use_ec2_iam_role then
@@ -106,7 +116,9 @@ return {
       if not plugin_t.aws_key or plugin_t.aws_key == "" or not plugin_t.aws_secret or plugin_t.aws_secret == "" then
         return false, Errors.schema "You need to set aws_key and aws_secret or need to use EC2 IAM roles"
       end
-      return true
+    end
+    if plugin_t.proxy_url and not plugin_t.proxy_scheme then
+      return false, Errors.schema "You need to set proxy_scheme when proxy_url is set"
     end
     return true
   end
